@@ -2,7 +2,9 @@ import click
 import json
 import importlib
 import os
+import requests
 import sys
+import time
 
 from shakedown.cli.helpers import *
 from shakedown.dcos import dcos_url
@@ -11,6 +13,10 @@ from shakedown.dcos import dcos_url
 @click.command('shakedown')
 @click.argument('tests', nargs=-1)
 @click.option('-u', '--dcos-url', help='URL to a running DC/OS cluster.')
+@click.option('-U', '--provisioner-url', help='URL to a DC/OS provisioning service')
+@click.option('-P', '--provisioner-platform', help='Platform type to request from provisioning service')
+@click.option('--provisioner-wait', default=60, help='Seconds (exponential) to wait between provisioning attempts')
+@click.option('--provisioner-max-tries', default=3, help='Number of times to attempt cluster provision')
 @click.option('-f', '--fail', type=click.Choice(['fast', 'never']), default='never', help='Sepcify whether to continue testing when encountering failures. (default: never)')
 @click.option('-m', '--timeout', default=1800, help='Seconds after which to terminate a running test')
 @click.option('--ssh-user', help='Username for cluster ssh authentication')
@@ -41,12 +47,17 @@ def cli(**args):
     if args['quiet']:
         shakedown.cli.quiet = True
 
-    if not args['dcos_url']:
+    if not args['dcos_url'] and not args['provisioner_url']:
         args['dcos_url'] = dcos_url()
 
     if not args['dcos_url']:
-        click.secho('error: --dcos-url is a required option; see --help for more information.', fg='red', bold=True)
-        sys.exit(1)
+        if args['provisioner_url']:
+          if not args['provisioner_platform']:
+            click.secho('error: platform is required when using --provisioner-url.', fg='red', bold=True)
+            sys.exit(1)
+        else:
+          click.secho('error: --dcos-url is a required option; see --help for more information.', fg='red', bold=True)
+          sys.exit(1)
 
     if args['ssh_key_file']:
         shakedown.cli.ssh_key_file = args['ssh_key_file']
@@ -56,6 +67,42 @@ def cli(**args):
 
     if not args['no_banner']:
         echo(banner(), n=False)
+
+    if args['provisioner_url']:
+      echo('Provisioning DC/OS cluster...', d='step-maj')
+
+      echo('Checking provisioner URL...', d='step-min', n=False)
+      try:
+        requests.get(args['provisioner_url'])
+        echo(args['provisioner_url'])
+      except:
+        click.secho("error: cannot connect to '{}'.".format(args['provisioner_url']), fg='red', bold=True)
+        sys.exit(1)
+
+      echo('Checking requested cluster platform...', d='step-min', n=False)
+      echo(args['provisioner_platform'])
+
+      success = False
+      attempt = 1
+      while not success:
+        echo("Waiting for cluster...", d='step-min', n=False)
+
+        response = requests.post("{}/api/v1/vm/{}".format(args['provisioner_url'], args['provisioner_platform'])).json()
+        if ('ok' in response) and (response['ok']):
+          success = True
+          args['cluster_id'] = response[args['provisioner_platform']]['vm']
+          echo(args['cluster_id'])
+          args['dcos_url'] = 'http://' + requests.get("{}/api/v1/vm/{}".format(args['provisioner_url'], args['cluster_id'])).json()[args['cluster_id']]['hostname']
+        else:
+          if attempt < (args['provisioner_max_tries'] + 1):
+            sleep = args['provisioner_wait'] * attempt
+            print("unable to provision cluster, retrying in {} seconds...".format(sleep))
+            time.sleep(sleep)
+          else:
+            click.secho('error: unable to provision cluster.', fg='red', bold=True)
+            sys.exit(1)
+
+        attempt += 1
 
     echo('Running pre-flight checks...', d='step-maj')
 
@@ -335,5 +382,16 @@ def cli(**args):
             opts.append(test)
 
     exitstatus = imported['pytest'].main(opts, plugins=[shakedown()])
+
+    if args['provisioner_url']:
+      echo('Cleaning up...', d='step-maj')
+      echo('Destroying cluster...', d='step-min', n=False)
+      response = requests.delete("{}/api/v1/vm/{}".format(args['provisioner_url'], args['cluster_id']))
+      if ('ok' in response) and (response['ok']):
+        echo('ok')
+      else:
+        click.secho('error: unable to delete cluster.', fg='red', bold=True)
+
+    echo('')
 
     sys.exit(exitstatus)
