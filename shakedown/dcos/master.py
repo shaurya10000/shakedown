@@ -13,34 +13,37 @@ DISABLE_MASTER_INCOMING = "-I INPUT -p tcp --dport 5050 -j REJECT"
 DISABLE_MASTER_OUTGOING = "-I OUTPUT -p tcp --sport 5050 -j REJECT"
 
 
-def partition_master(incoming=True, outgoing=True):
+def partition_master(master_ip, incoming=True, outgoing=True):
     """ Partition master's port alone. To keep DC/OS cluster running.
 
+    :param master_ip IP of the master to be partitioned
     :param incoming: Partition incoming traffic to master process. Default True.
     :param outgoing: Partition outgoing traffic from master process. Default True.
     """
 
     echo('Partitioning master. Incoming:{} | Outgoing:{}'.format(incoming, outgoing))
 
-    network.save_iptables(shakedown.master_ip())
-    network.flush_all_rules(shakedown.master_ip())
-    network.allow_all_traffic(shakedown.master_ip())
+    network.save_iptables(master_ip)
+    network.flush_all_rules(master_ip)
+    network.allow_all_traffic(master_ip)
 
     if incoming and outgoing:
-        network.run_iptables(shakedown.master_ip(), DISABLE_MASTER_INCOMING)
-        network.run_iptables(shakedown.master_ip(), DISABLE_MASTER_OUTGOING)
+        network.run_iptables(master_ip, DISABLE_MASTER_INCOMING)
+        network.run_iptables(master_ip, DISABLE_MASTER_OUTGOING)
     elif incoming:
-        network.run_iptables(shakedown.master_ip(), DISABLE_MASTER_INCOMING)
+        network.run_iptables(master_ip, DISABLE_MASTER_INCOMING)
     elif outgoing:
-        network.run_iptables(shakedown.master_ip(), DISABLE_MASTER_OUTGOING)
+        network.run_iptables(master_ip, DISABLE_MASTER_OUTGOING)
     else:
         pass
 
 
-def reconnect_master():
+def reconnect_master(master_ip):
     """ Reconnect a previously partitioned master to the network
+
+    :param master_ip IP of the master to be reconnected
     """
-    network.restore_iptables(shakedown.master_ip())
+    network.restore_iptables(master_ip)
 
 
 def restart_master_node():
@@ -160,10 +163,10 @@ def master_http_service(port=7777):
 
 @contextlib.contextmanager
 def disconnected_master(incoming=True, outgoing=True):
-
-    partition_master(incoming, outgoing)
+    master_ip = master_leader_ip()
+    partition_master(master_ip, incoming, outgoing)
     try:
         yield
     finally:
         # return config to previous state
-        reconnect_master()
+        reconnect_master(master_ip)

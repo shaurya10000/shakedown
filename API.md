@@ -2041,6 +2041,7 @@ Separates the master from the cluster by disabling inbound and/or outbound traff
 
 parameter | description | type | default
 --------- | ----------- | ---- | -------
+master_ip | IP of the master to be partitioned | str |
 incoming | disable incoming traffic? | bool | `True`
 outgoing | disable outgoing traffic? | bool | `True`
 
@@ -2048,7 +2049,7 @@ outgoing | disable outgoing traffic? | bool | `True`
 
 ```python
 # Disable incoming traffic ONLY to the DC/OS master.
-partition_master(True, False)
+partition_master("192.168.1.2", True, False)
 ```
 
 
