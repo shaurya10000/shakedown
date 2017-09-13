@@ -1,5 +1,6 @@
 import os
 import dcos
+import requests
 
 import shakedown
 
@@ -104,6 +105,20 @@ def authenticate(username, password):
     }
 
     response = dcos.http.request('post', url, json=creds)
+
+    if response.status_code == 200:
+        return response.json()['token']
+    else:
+        return None
+
+
+def authenticate_mds(username, password):
+    """Authenticate with an MDS DC/OS cluster and return an ACS token.
+    return: ACS token
+    """
+    url = _gen_url('acs/api/v1/auth/locallogin')
+
+    response = requests.post(url, auth=(username, password))
 
     if response.status_code == 200:
         return response.json()['token']

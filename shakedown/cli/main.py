@@ -119,7 +119,7 @@ def cli(**args):
     if not authenticated and args['username'] and args['password']:
         try:
             echo('Validating username and password...', d='step-min', n=False)
-            token = shakedown.authenticate(args['username'], args['password'])
+            token = shakedown.authenticate_mds(args['username'], args['password'])
 
             with stdchannel_redirected(sys.stderr, os.devnull):
                 imported['dcos'].config.set_val('core.dcos_acs_token', token)
