@@ -56,7 +56,11 @@ target/
 
 # OS X
 .DS_Store
+<<<<<<< HEAD
 
 # IntelliJ
 .idea/
 *.iml
+=======
+.idea
+>>>>>>> 5c1537f634e75ad34b09f5db77a359096f73968d

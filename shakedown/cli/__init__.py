@@ -1,3 +1,3 @@
 quiet = False
-ssh_key_file = '~/.ssh/id_rsa'
-ssh_user = 'core'
+ssh_key_file = '/tmp/ssh260.pem'
+ssh_user = 'shaugupt'

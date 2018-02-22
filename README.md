@@ -17,7 +17,7 @@ Shakedown requires Python 3.4+.
 
 The recommended Shakedown installation method is via the PyPI Python Package Index repository at [https://pypi.python.org/pypi/dcos-shakedown](https://pypi.python.org/pypi/dcos-shakedown).  To install the latest version and all required modules:
 
-`pip install dcos-shakedown`
+`pip3 install dcos-shakedown`
 
 dcos-shakedown has a number of dependencies which need to be available.  One of those dependencies, the cryptography module requires a number of OS level libraries in order to install correctly which include: `build-essential libssl-dev libffi-dev python-dev`.  For environments other than linux please read [Stackoverflow](http://stackoverflow.com/questions/22073516/failed-to-install-python-cryptography-package-with-pip-and-setup-py). On a new ubuntu environment the following should install dcos-shakedown.
 
@@ -32,13 +32,13 @@ To pull and install from our `master` branch on GitHub:
 ```
 git clone https://github.com/dcos/shakedown.git
 cd shakedown
-pip install -r requirements.txt && pip install -e .
+pip3 install -r requirements.txt && pip3 install -e .
 ```
 
 Or if you do not wish to pin to a version of `dcos-cli`:
 
 ```
-pip install -r requirements-edge.txt && pip install -e .
+pip3 install -r requirements-edge.txt && pip3 install -e .
 ```
 
 ### Setting up a new Shakedown virtual environment
@@ -46,10 +46,10 @@ pip install -r requirements-edge.txt && pip install -e .
 If you'd like to isolate your Shakedown Python environment, you can do so using the [virtualenv](https://pypi.python.org/pypi/virtualenv) tool.  To create a new virtual environment in `$HOME/shakedown`:
 
 ```
-pip install virtualenv
+pip3 install virtualenv
 virtualenv $HOME/shakedown
 source $HOME/shakedown/bin/activate
-pip install dcos-shakedown
+pip3 install dcos-shakedown
 ```
 
 This virtual environment can then be activated in new terminal sessions with:

@@ -1,7 +1,9 @@
 import pytest
 from tests import nodetool
+import inspect
 
 @pytest.mark.sanity
+@pytest.mark.dcos_min_version('1.9')
 def test_status_parsing():
     status = """Datacenter: datacenter1
 =======================
@@ -14,6 +16,7 @@ UN  10.0.1.28   83.78 KB   256          69.3%             a553b89d-51e1-4d85-81b
 
 """
 
+    print("MDS Debugging..8" + __name__)
     nodes = nodetool.parse_status(status)
     assert len(nodes) == 3
 

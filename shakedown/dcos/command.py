@@ -45,7 +45,9 @@ def run_command(
     print("MDS Debugging5..Obtained transport")
 
     if transport:
+        print("MDS Debugging6..further")
         transport = start_transport(transport, username, key)
+        print("MDS Debugging7..further")
     else:
         print("error: unable to connect to {}".format(host))
         return False, ''
@@ -56,10 +58,12 @@ def run_command(
 
         output = ''
 
+        print("MDS Debugging7a..further")
         channel = transport.open_session()
+
         channel.exec_command(command)
         exit_status = channel.recv_exit_status()
-
+        print("MDS Debugging8..further")
         while channel.recv_ready():
             rl, wl, xl = select.select([channel], [], [], 0.0)
             if len(rl) > 0:
@@ -88,6 +92,30 @@ def run_command_on_master(
     """
 
     return run_command(shakedown.master_ip(), command, username, key_path, noisy)
+
+
+def run_command_on_leader(
+        command,
+        username=None,
+        key_path=None,
+        noisy=True
+):
+    """ Run a command on the Mesos leader.  Important for Multi-Master.
+    """
+
+    return run_command(shakedown.master_leader_ip(), command, username, key_path, noisy)
+
+
+def run_command_on_marathon_leader(
+        command,
+        username=None,
+        key_path=None,
+        noisy=True
+):
+    """ Run a command on the Marathon leader
+    """
+
+    return run_command(shakedown.marathon_leader_ip(), command, username, key_path, noisy)
 
 
 def run_command_on_agent(

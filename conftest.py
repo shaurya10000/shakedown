@@ -20,6 +20,7 @@ from testing import sdk_security
 from testing import sdk_utils
 #import teamcity
 import traceback
+import inspect
 
 
 
@@ -143,7 +144,7 @@ def pytest_runtest_makereport(item, call):
         except Exception:
             log.exception('Task log collection failed!')
         try:
-            log.info('Fetching mesos state')
+            log.info('Fetching mesos state..mds')
             dump_mesos_state(item)
         except Exception:
             log.exception('Mesos state collection failed!')
@@ -191,19 +192,24 @@ def pytest_runtest_setup(item):
         # 2 Reset the test index.
         testlogs_test_index = 0
         # 3 Remove any prior logs for the test suite.
+        print("MDS Debugging..2")
         test_log_dir = sdk_utils.get_test_suite_log_directory(item)
+        print("MDS Debugging..4")
         if os.path.exists(test_log_dir):
             log.info('Deleting existing test suite logs: {}/'.format(test_log_dir))
             shutil.rmtree(test_log_dir)
 
+    print("MDS Debugging..5")
     # Increment the test index (to 1, if this is a new suite), and pass the value to sdk_utils for use internally.
     testlogs_test_index += 1
     sdk_utils.set_test_index(testlogs_test_index)
 
-    #print("MDS Debugging.." + inspect.currentframe().f_code.co_name + inspect.currentframe().f_back.f_lineno)
+    print("MDS Debugging..6")
     min_version_mark = item.get_marker('dcos_min_version')
+    print("MDS Debugging..7")
     #print("MDS Debugging.." + inspect.currentframe().f_code.co_name + inspect.currentframe().f_back.f_lineno)
-    #print('min_version_mark = ' + min_version_mark)
+    '''
+    print('min_version_mark = ' + min_version_mark)
     if min_version_mark:
         min_version = min_version_mark.args[0]
         message = 'Feature only supported in DC/OS {} and up'.format(min_version)
@@ -215,6 +221,7 @@ def pytest_runtest_setup(item):
             pytest.skip(message)
     print(message)
     #print("MDS Debugging.." + inspect.currentframe().f_code.co_name + inspect.currentframe().f_back.f_lineno)
+    '''
     traceback.print_stack()
 
 

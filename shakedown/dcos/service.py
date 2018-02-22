@@ -4,7 +4,7 @@ from shakedown.dcos.spinner import *
 from shakedown.dcos import dcos_service_url, dcos_agents_state, master_url
 from shakedown.dcos.master import get_all_masters
 from shakedown.dcos.zookeeper import delete_zk_node
-from dcos.errors import DCOSException, DCOSHTTPException
+from dcos.errors import DCOSException, DCOSConnectionError, DCOSHTTPException
 
 from urllib.parse import urljoin
 import json
@@ -27,6 +27,7 @@ def get_service(
         :rtype: dict, or None
     """
 
+    print("mds get_service")
     services = mesos.get_master().frameworks(inactive=inactive, completed=completed)
 
     for service in services:
@@ -77,7 +78,7 @@ def get_service_tasks(
         :return: a list of task objects
         :rtye: [dict], or None
     """
-
+    print("mds get_service_tasks")
     service = get_service(service_name, inactive, completed)
 
     if service is not None and service['tasks']:
@@ -202,13 +203,18 @@ def get_service_ips(
     """
 
     service_tasks = get_service_tasks(service_name, inactive, completed)
-
+    print("mds get_service_ips")
     ips = set([])
 
     for task in service_tasks:
         if task_name is None or task['name'] == task_name:
-            for ip in task['statuses'][0]['container_status']['network_infos'][0]['ip_addresses']:
-                ips.add(ip['ip_address'])
+            for status in task['statuses']:
+                # Only the TASK_RUNNING status will have correct IP information.
+                if status["state"] != "TASK_RUNNING":
+                    continue
+
+                for ip in status['container_status']['network_infos'][0]['ip_addresses']:
+                    ips.add(ip['ip_address'])
 
     return ips
 
@@ -436,7 +442,7 @@ def task_states_predicate(service_name, expected_task_count, expected_task_state
     """
     try:
         tasks = get_service_tasks(service_name)
-    except DCOSHTTPException:
+    except (DCOSConnectionError, DCOSHTTPException):
         tasks = []
     matching_tasks = []
     other_tasks = []

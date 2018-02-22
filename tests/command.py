@@ -59,21 +59,36 @@ def check_health(wait_time=WAIT_TIME_IN_SECONDS, assert_success=True):
 
 
 def get_cassandra_config():
+    str = marathon_api_url('apps/{}/versions'.format(PACKAGE_NAME))
+    print("mds2 get_cassandra_config")
+    print(str)
     response = request(
         dcos.http.get,
-        marathon_api_url('apps/{}/versions'.format(PACKAGE_NAME))
+        str
     )
-    assert response.status_code == 200, 'Marathon versions request failed'
+
+    if response :
+        print(response)
+    print(response.content)
+    print("mds get_cassandra_config")
+    #print("mds get_cassandra_config" + response.status_code)
+    #assert response.status_code == 200, 'Marathon versions request failed'
 
     version = response.json()['versions'][0]
-
+    print("mds get_cassandra_config" + version)
     response = dcos.http.get(marathon_api_url('apps/{}/versions/{}'.format(PACKAGE_NAME, version)))
-    assert response.status_code == 200
+    #assert response.status_code == 200
 
+    print(response)
+    print(response.content)
+    #print(response.json()['CASSANDRA_CPUS'])
     config = response.json()
-    del config['uris']
+    print("MDS---------------------------------------")
+    #print(config)
+    #del config['uris']
+    print(config['version'])
     del config['version']
-
+    print("mds get_cassandra_config" + " returning")
     return config
 
 
@@ -114,6 +129,8 @@ def unit_health_url(unit_and_node=''):
 
 
 def request(request_fn, *args, **kwargs):
+    print("MDS request")
+    #print("mds.." + args)
     def success_predicate(response):
         return (
             response.status_code in [200, 202],
@@ -129,6 +146,10 @@ def spin(fn, success_predicate, wait_time=WAIT_TIME_IN_SECONDS, assert_success=T
     while now < end_time:
         print("%s: %.01fs left" % (time.strftime("%H:%M:%S %Z", time.localtime(now)), end_time - now))
         result = fn(*args, **kwargs)
+#        try :
+#            result = fn(*args, **kwargs)
+#        except Exception as e:
+#            print(str(e))
         is_successful, error_message = success_predicate(result)
         if is_successful:
             print('Success state reached, exiting spin.')

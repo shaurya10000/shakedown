@@ -1,3 +1,83 @@
+## 1.4.12 (2017-12-20)
+
+Features:
+
+  - support for DC/OS 1.11 (`@dcos_1_11` PyTest marker)
+
+Fixes:
+
+  - don't flake if a connection error occurs during an install
+
+## 1.4.11 (2017-12-08)
+
+Features:
+
+  - new function to retrieve available versions of packages
+    - `get_package_versions()`
+  - bumped `dcoscli` version to `0.5.7`
+
+Fixes:
+
+  - handle `skip` state when printing output
+
+## 1.4.10 (2017-12-06)
+
+Features:
+
+  - new leader-based run functions
+    - `run_command_on_leader()`
+    - `run_command_on_marathon_leader()`
+  - log the resulting package version when installing from `latest`
+
+## 1.4.9 (2017-10-18)
+
+Features:
+
+  - added API functions to query for Docker version
+    - `docker_version()`
+    - `docker_client_version()`
+    - `docker_server_version()`
+  - added classifiers to the setup to specify the programming langauge to
+    be used with pipenv
+
+Fixes:
+
+  - removed staticly-set assertions in `test_get_reserved_resources()`
+
+## 1.4.8 (2017-09-14)
+
+Features:
+
+  - all CLI options now have the option to be specified as environmental
+    variables, eg. `SHAKEDOWN_DCOS_URL`, `SHAKDOWN_USER`, etc.
+
+Fixes:
+
+  - CLI subcommand (non-app) packages now treated the same as app/service
+    packages
+    - `install_package()` and `uninstall_package()` won't throw exceptions
+    - `package_installed()` returns `True` for non-app packages
+
+## 1.4.7 (2017-09-01)
+
+Features:
+
+  - bumped `dcoscli` version to `0.5.5`
+
+## 1.4.6 (2017-08-23)
+
+Features:
+
+  - bumped `dcoscli` version to `0.5.4`
+  - better attach error handling
+  - move from pip to pip3
+
+## 1.4.5 (2017-07-13)
+
+Features:
+
+  - bumped `dcoscli` version to `0.5.3`
+
 ## 1.4.4 (2017-06-19)
 
 Fixes:
@@ -68,7 +148,7 @@ Features:
 
   - `wait_for` waits for service endpoints to be debounced
     successfully in a specified number of masters in multi-master
-    setups 
+    setups
   - new PyTest decorators methods for determining Shakedown versions
     - `shakedown_canonical_version()`
     - `shakedown_version_less_than()`
@@ -149,7 +229,7 @@ Features:
   - DC/OS Enterprise Edition version-checking
     - `ee_version()` method, `@strict`, `@permissive`, and `@disabled`
       PyTest security mode markers
-  - bumped `dcosdcli` version to `0.4.16`
+  - bumped `dcoscli` version to `0.4.16`
 
 ## 1.2.0 (2017-02-17)
 
@@ -212,7 +292,7 @@ Features:
 
 Features:
 
-  - bumped `dcosdcli` version to `0.4.15`
+  - bumped `dcoscli` version to `0.4.15`
 
 Fixes:
 
@@ -262,7 +342,7 @@ Features:
     and `delete_all_apps_wait`
   - support for passing a dict object containing JSON options to
     `install_package` methods
-  - bumped `dcosdcli` version to `0.4.14`
+  - bumped `dcoscli` version to `0.4.14`
 
 Fixes:
 
@@ -343,7 +423,7 @@ Fixes:
 
 Features:
 
-  - bumped `dcosdcli` version to `0.4.13`
+  - bumped `dcoscli` version to `0.4.13`
   - modified CLI 'short' flags to match SSH/curl
 
 Fixes:
