@@ -8,6 +8,21 @@ import itertools
 import shakedown
 
 
+def mds_get_transport(host):
+    """ For use from inside AWS VPC
+        Create a transport object
+
+        :param host: the hostname to connect to
+        :type host: str
+
+        :return: a transport object
+        :rtype: paramiko.Transport
+    """
+
+    transport = paramiko.Transport(host)
+    return transport
+
+
 def get_transport(host, username, key):
     """ Create a transport object
 
@@ -22,20 +37,26 @@ def get_transport(host, username, key):
         :rtype: paramiko.Transport
     """
 
-    if host == shakedown.master_ip():
-        transport = paramiko.Transport(host)
+    if host == '34.217.31.163':  # shakedown.master_ip():
+        transport = paramiko.Transport("34.217.31.163")
     else:
-        transport_master = paramiko.Transport(shakedown.master_ip())
+        # transport_master = paramiko.Transport("shakedown.master_ip())
+        print("MDS Debugging.. 34.217.31.163, " + username)
+        transport_master = paramiko.Transport("34.217.31.163")
+        print("MDS Debugging1.. 34.217.31.163, " + username)
         transport_master = start_transport(transport_master, username, key)
+        print("MDS Debugging2.. 34.217.31.163, " + username)
 
         if not transport_master.is_authenticated():
             print("error: unable to authenticate {}@{} with key {}".format(username, shakedown.master_ip(), key_path))
             return False
 
         try:
-            channel = transport_master.open_channel('direct-tcpip', (host, 22), ('127.0.0.1', 0))
-        except paramiko.SSHException:
+            channel = transport_master.open_channel('direct-tcpip', (host, 22), ('10.0.0.205', 34567))
+        except paramiko.SSHException as e:
             print("error: unable to connect to {}".format(host))
+            print("Printing the exception..")
+            str(e)
             return False
 
         transport = paramiko.Transport(channel)
@@ -66,6 +87,8 @@ def start_transport(transport, username, key):
             transport.auth_publickey(username, test_key)
             break
         except paramiko.AuthenticationException as e:
+            print("Execption.." + __name__)
+            print(str(e))
             pass
     else:
         raise ValueError('No valid key supplied')

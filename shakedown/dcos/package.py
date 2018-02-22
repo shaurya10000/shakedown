@@ -148,6 +148,7 @@ def install_package_and_wait(
     """ Install a package via the DC/OS library and wait for completion
     """
 
+    print("MDS Debuggin .. " + __name__)
     return install_package(
         package_name,
         package_version,

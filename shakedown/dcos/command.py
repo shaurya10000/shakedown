@@ -31,16 +31,18 @@ def run_command(
         :return: Output of command
         :rtype: string
     """
-
+    print("MDS Debugging.." + host)
     if not username:
         username = shakedown.cli.ssh_user
 
     if not key_path:
         key_path = shakedown.cli.ssh_key_file
 
+    print("MDS Debugging.." + key_path)
     key = validate_key(key_path)
 
-    transport = get_transport(host, username, key)
+    transport = mds_get_transport(host)
+    print("MDS Debugging5..Obtained transport")
 
     if transport:
         transport = start_transport(transport, username, key)
@@ -69,6 +71,7 @@ def run_command(
         try_close(channel)
         try_close(transport)
 
+        print("run_command ouput = " + output)
         return exit_status == 0, output
     else:
         print("error: unable to authenticate {}@{} with key {}".format(username, host, key_path))
