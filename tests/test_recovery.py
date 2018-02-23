@@ -137,7 +137,7 @@ def run_cleanup():
     payload = {'nodes': ['*']}
     request(
         dcos.http.put,
-        cassandra_api_url('cleanup/start'),
+        cassandra_api_url('/plans/cleanup/start'),
         json=payload,
         is_success=request_success
     )
@@ -154,12 +154,12 @@ def verify_plan(plan):
 def run_planned_operation(operation, failure=lambda: None, recovery=lambda: None):
     plan = get_and_verify_plan()
     print("Running planned operation")
-    #operation()
+    operation()
     print("MDS12.. run_planned_operation")
     # Give scheduler time to come up again
 
     print("MDS.. run_planned_operation")
-    #time.sleep(240)
+    time.sleep(240)
 
     # get_and_verify_plan(
     #     lambda p: (
@@ -582,8 +582,8 @@ def test_config_update_then_partition():
 
     check_health()
 
-'''
-#bump_cpu_count_config does not evaluates
+
+#Passed
 @pytest.mark.recovery
 def test_config_update_then_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -604,6 +604,7 @@ def test_config_update_then_all_partition():
 
 
 '''
+#passed
 @pytest.mark.recovery
 def test_cleanup_then_kill_task_in_node():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -617,7 +618,7 @@ def test_cleanup_then_kill_task_in_node():
 
     check_health()
 
-
+#passed
 @pytest.mark.recovery
 def test_cleanup_then_kill_all_task_in_node():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -630,7 +631,7 @@ def test_cleanup_then_kill_all_task_in_node():
 
     check_health()
 
-
+'''
 @pytest.mark.recovery
 def test_cleanup_then_scheduler_died():
     host = get_scheduler_host()
