@@ -58,8 +58,9 @@ def __get_all_agents():
     agents = client.get_state_summary()['slaves']
     return agents
 
-ALLOW_SSH = '-I INPUT -p tcp --dport 22 -j ACCEPT'
+ALLOW_IN_SSH = '-I INPUT -p tcp --dport 22 -j ACCEPT'
 ALLOW_PING = '-I INPUT -p icmp -j ACCEPT'
+ALLOW_OUT_SSH = '-A OUTPUT -p tcp --dport 22 -j ACCEPT'
 DISALLOW_MESOS = '-I OUTPUT -p tcp --sport 5051  -j REJECT'
 DISALLOW_INPUT = '-A INPUT -j REJECT'
 
@@ -73,8 +74,9 @@ def partition_agent(host):
     network.save_iptables(host)
     network.flush_all_rules(host)
     network.allow_all_traffic(host)
-    network.run_iptables(host, ALLOW_SSH)
+    network.run_iptables(host, ALLOW_IN_SSH)
     network.run_iptables(host, ALLOW_PING)
+    #network.run_iptables(host, ALLOW_OUT_SSH)
     network.run_iptables(host, DISALLOW_MESOS)
     network.run_iptables(host, DISALLOW_INPUT)
 

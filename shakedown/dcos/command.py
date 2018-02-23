@@ -34,6 +34,7 @@ def run_command(
     print("MDS Debugging.." + host)
     if not username:
         username = shakedown.cli.ssh_user
+    print("MDS Debugging.." + username)
 
     if not key_path:
         key_path = shakedown.cli.ssh_key_file

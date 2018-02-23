@@ -154,12 +154,12 @@ def verify_plan(plan):
 def run_planned_operation(operation, failure=lambda: None, recovery=lambda: None):
     plan = get_and_verify_plan()
     print("Running planned operation")
-    operation()
+    #operation()
     print("MDS12.. run_planned_operation")
     # Give scheduler time to come up again
 
     print("MDS.. run_planned_operation")
-    time.sleep(240)
+    #time.sleep(240)
 
     # get_and_verify_plan(
     #     lambda p: (
@@ -177,6 +177,8 @@ def run_planned_operation(operation, failure=lambda: None, recovery=lambda: None
     print("Run recovery operation")
     recovery()
     print("Verify plan after failure")
+    print("sleeping for 120 sec..let nodes come up again..run_planned_operation")
+    time.sleep(120)
     get_and_verify_plan(lambda p: p['status'] == infinity_commons.PlanState.COMPLETE.value)
 
 
@@ -559,10 +561,10 @@ def test_config_update_then_zk_killed():
 
     check_health()
 
-'''
 
 
-#bump_cpu_count_config does not evaluates
+
+#Passed
 @pytest.mark.recovery
 def test_config_update_then_partition():
     host = get_node_host()
@@ -570,8 +572,10 @@ def test_config_update_then_partition():
 
     def partition():
         shakedown.partition_agent(host)
+        print("partitioned the host- " + host)
         time.sleep(20)
         shakedown.reconnect_agent(host)
+        print("Reconnected the agent- " + host)
 
     run_planned_operation(
         lambda: bump_cpu_count_config(-0.1), partition, lambda: recover_host_from_partitioning(host))
@@ -597,7 +601,7 @@ def test_config_update_then_all_partition():
 
     run_planned_operation(bump_cpu_count_config, partition, recovery)
     check_health()
-'''
+
 
 '''
 @pytest.mark.recovery

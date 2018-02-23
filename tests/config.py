@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 PACKAGE_NAME = 'beta-cassandra'
 
-SERVICE_NAME = os.environ.get('SOAK_SERVICE_NAME') or 'or2f99d4b54dcd'
+SERVICE_NAME = os.environ.get('SOAK_SERVICE_NAME') or 'or2a646f1d9cfd'
 
 DEFAULT_TASK_COUNT = 3
 DEFAULT_CASSANDRA_TIMEOUT = 600

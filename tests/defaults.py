@@ -3,8 +3,8 @@ import shakedown
 
 
 DEFAULT_NODE_COUNT = 3
-PACKAGE_NAME = 'or2f99d4b54dcd'
-SERVICE_NAME = 'or2f99d4b54dcd'
+PACKAGE_NAME = 'or2a646f1d9cfd'
+SERVICE_NAME = 'or2a646f1d9cfd'
 TASK_RUNNING_STATE = 'TASK_RUNNING'
 
 DCOS_URL = shakedown.run_dcos_command('config show core.dcos_url')[0].strip()
