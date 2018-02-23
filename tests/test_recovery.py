@@ -608,7 +608,10 @@ def test_config_update_then_all_partition():
 @pytest.mark.recovery
 def test_cleanup_then_kill_task_in_node():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
+    print(str(hosts))
+
     host = get_node_host()
+    print("host = " + str(host))
 
     run_planned_operation(
         run_cleanup,
