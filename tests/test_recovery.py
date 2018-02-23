@@ -500,7 +500,6 @@ def test_config_update_then_scheduler_died():
     time.sleep(60)
     check_health()
 
-
 '''
 #bump_cpu_count_config does not evaluates
 @pytest.mark.recovery
