@@ -145,12 +145,17 @@ def spin(fn, success_predicate, wait_time=WAIT_TIME_IN_SECONDS, assert_success=T
     end_time = now + wait_time
     while now < end_time:
         print("%s: %.01fs left" % (time.strftime("%H:%M:%S %Z", time.localtime(now)), end_time - now))
-        result = fn(*args, **kwargs)
-#        try :
-#            result = fn(*args, **kwargs)
-#        except Exception as e:
-#            print(str(e))
-        is_successful, error_message = success_predicate(result)
+#        result = fn(*args, **kwargs)
+        try :
+            result = fn(*args, **kwargs)
+        except Exception as e:
+            print(str(e))
+            print(str(result))
+            #print(str(result.content))
+        try :
+            is_successful, error_message = success_predicate(result)
+        except Exception as e:
+            print(str(e))
         if is_successful:
             print('Success state reached, exiting spin.')
             break

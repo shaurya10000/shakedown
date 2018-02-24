@@ -134,12 +134,16 @@ def kill_cassandra_daemon_executor(pattern, host=None):
 
 
 def run_cleanup():
-    payload = {'nodes': ['*']}
+    payload = {'nodes': '*'}
+    str = cassandra_api_url('/plans/cleanup/start')
+    print(str)
+    #dcos.http.post(str, data=None, json=payload)
     request(
-        dcos.http.put,
-        cassandra_api_url('/plans/cleanup/start'),
-        json=payload,
-        is_success=request_success
+        dcos.http.post,
+        str,
+        data=None,
+        json=payload#,
+        #is_success=request_success
     )
 
 def verify_plan(plan):
@@ -152,7 +156,7 @@ def verify_plan(plan):
 
 
 def run_planned_operation(operation, failure=lambda: None, recovery=lambda: None):
-    plan = get_and_verify_plan()
+    #plan = get_and_verify_plan()
     print("Running planned operation")
     operation()
     print("MDS12.. run_planned_operation")
@@ -603,7 +607,6 @@ def test_config_update_then_all_partition():
     check_health()
 
 
-'''
 #passed
 @pytest.mark.recovery
 def test_cleanup_then_kill_task_in_node():
@@ -634,7 +637,8 @@ def test_cleanup_then_kill_all_task_in_node():
 
     check_health()
 
-'''
+
+#node-0 got lost after scheduler started again
 @pytest.mark.recovery
 def test_cleanup_then_scheduler_died():
     host = get_scheduler_host()
@@ -649,20 +653,21 @@ def test_cleanup_then_executor_killed():
 
     run_planned_operation(
         run_cleanup,
-        lambda: kill_task_with_pattern('cassandra.executor.Main', host),
+        lambda: kill_cassandra_daemon_executor('CassandraDaemon', host),
         lambda: recover_failed_agents([host])
     )
 
     check_health()
 
 
+'''
 @pytest.mark.recovery
 def test_cleanup_then_all_executors_killed():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
 
     run_planned_operation(
         run_cleanup,
-        lambda: [kill_task_with_pattern('cassandra.executor.Main', h) for h in hosts],
+        lambda: [kill_cassandra_daemon_executor('CassandraDaemon', h) for h in hosts],
         lambda: recover_failed_agents(hosts)
     )
 
@@ -677,6 +682,7 @@ def test_cleanup_then_master_killed():
     verify_leader_changed(master_leader_ip)
     check_health()
 
+'''
 
 @pytest.mark.recovery
 def test_cleanup_then_zk_killed():
