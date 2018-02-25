@@ -11,11 +11,13 @@ import random
 import string
 
 from testing import sdk_cmd
+import traceback
 
 log = logging.getLogger(__name__)
 
 
 def add_universe_repos():
+    traceback.print_stack()
     log.info('Adding universe repos')
 
     # prepare needed universe repositories

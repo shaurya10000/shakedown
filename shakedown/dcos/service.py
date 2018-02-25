@@ -231,15 +231,32 @@ def service_healthy(service_name, app_id=None):
         :rtype: bool
     """
 
+    print("service_healthy")
     marathon_client = marathon.create_client()
-    apps = marathon_client.get_apps_for_framework(service_name)
+    print("service_healthy 1")
+    marathon_api_url = shakedown.dcos_service_url('marathon')
+    response = http.get(marathon_api_url + '/v2/apps')
+    #apps = marathon_client.get_apps_for_framework(service_name)
+    apps = response.json().get('apps')
 
-    if apps:
-        for app in apps:
-            if (app_id is not None) and (app['id'] != "/{}".format(str(app_id))):
-                continue
+    print("apps = " + str(apps))
+    myApp = None
+    for app in apps:
+        print("--------------------------------------------")
+        print("app = " + str(app))
+        print("service name = " + str(app.get('labels', {}).get('DCOS_PACKAGE_FRAMEWORK_NAME')))
+        print("service_name = " + service_name)
+        if app.get('labels', {}).get(
+            'DCOS_PACKAGE_FRAMEWORK_NAME') == service_name :
+                 print("Assinging the app")
+                 myApp = app
 
-            if (app['tasksHealthy']) \
+
+    print("service_healthy 2")
+
+    if myApp is not None:
+        print("myApp = " + str(myApp))
+        if (app['tasksHealthy']) \
             and (app['tasksRunning']) \
             and (not app['tasksStaged']) \
             and (not app['tasksUnhealthy']):

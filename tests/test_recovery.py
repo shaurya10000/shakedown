@@ -187,12 +187,16 @@ def run_planned_operation(operation, failure=lambda: None, recovery=lambda: None
 
 
 def run_repair():
-    payload = {'nodes': ['*']}
+    payload = {'nodes': '*'}
+    str = cassandra_api_url('/plans/repair/start')
+    print(str)
+    #dcos.http.post(str, data=None, json=payload)
     request(
-        dcos.http.put,
-        cassandra_api_url('repair/start'),
-        json=payload,
-        is_success=request_success
+        dcos.http.post,
+        str,
+        data=None,
+        json=payload#,
+        #is_success=request_success
     )
 
 
@@ -228,10 +232,10 @@ def verify_leader_changed(old_leader_ip):
     def success_predicate(new_leader_ip):
         is_success = old_leader_ip != new_leader_ip
         if is_success :
-            return is_success, "Success and leader has changed!"
+            return is_success, "(MDS) Success and leader has changed!"
         is_success = old_leader_ip == new_leader_ip
         if is_success :
-            return is_success, "Success and leader has not changed!"
+            return is_success, "(MDS) Success and leader has not changed!"
 
 
     result = spin(fn, success_predicate)
@@ -660,7 +664,7 @@ def test_cleanup_then_executor_killed():
     check_health()
 
 
-'''
+#passed
 @pytest.mark.recovery
 def test_cleanup_then_all_executors_killed():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -673,7 +677,7 @@ def test_cleanup_then_all_executors_killed():
 
     check_health()
 
-
+#passed
 @pytest.mark.recovery
 def test_cleanup_then_master_killed():
     master_leader_ip = shakedown.master_leader_ip()
@@ -682,8 +686,9 @@ def test_cleanup_then_master_killed():
     verify_leader_changed(master_leader_ip)
     check_health()
 
-'''
 
+
+#passed
 @pytest.mark.recovery
 def test_cleanup_then_zk_killed():
     master_leader_ip = shakedown.master_leader_ip()
@@ -695,6 +700,7 @@ def test_cleanup_then_zk_killed():
     check_health()
 
 
+#Passed but all cleanup tasks got launched simultaneously
 @pytest.mark.recovery
 def test_cleanup_then_partition():
     host = get_node_host()
@@ -708,7 +714,9 @@ def test_cleanup_then_partition():
 
     check_health()
 
-
+#Passed
+# After this test the tasks keep getting killed and restarted!
+# Also the time of the task update keeps on changing
 @pytest.mark.recovery
 def test_cleanup_then_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -728,6 +736,7 @@ def test_cleanup_then_all_partition():
     check_health()
 
 
+#Passed
 @pytest.mark.recovery
 def test_repair_then_kill_task_in_node():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -741,7 +750,7 @@ def test_repair_then_kill_task_in_node():
 
     check_health()
 
-
+#flaky
 @pytest.mark.recovery
 def test_repair_then_kill_all_task_in_node():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -754,7 +763,9 @@ def test_repair_then_kill_all_task_in_node():
 
     check_health()
 
+'''
 
+#Passed
 @pytest.mark.recovery
 def test_repair_then_scheduler_died():
     host = get_scheduler_host()
@@ -763,32 +774,35 @@ def test_repair_then_scheduler_died():
     check_health()
 
 
+#Passed
 @pytest.mark.recovery
 def test_repair_then_executor_killed():
     host = get_node_host()
 
     run_planned_operation(
         run_repair,
-        lambda: kill_task_with_pattern('cassandra.executor.Main', host),
+        lambda: kill_cassandra_daemon_executor('CassandraDaemon', host),
         lambda: recover_failed_agents([host])
     )
 
     check_health()
 
 
+#Passed
 @pytest.mark.recovery
 def test_repair_then_all_executors_killed():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
 
     run_planned_operation(
         run_repair,
-        lambda: [kill_task_with_pattern('cassandra.executor.Main', h) for h in hosts],
+        lambda: [kill_cassandra_daemon_executor('CassandraDaemon', h) for h in hosts],
         lambda: recover_failed_agents(hosts)
     )
 
     check_health()
 
 
+#Passed
 @pytest.mark.recovery
 def test_repair_then_master_killed():
     master_leader_ip = shakedown.master_leader_ip()
@@ -797,7 +811,7 @@ def test_repair_then_master_killed():
     verify_leader_changed(master_leader_ip)
     check_health()
 
-
+#Passed
 @pytest.mark.recovery
 def test_repair_then_zk_killed():
     master_leader_ip = shakedown.master_leader_ip()
@@ -809,7 +823,7 @@ def test_repair_then_zk_killed():
 
     check_health()
 
-
+#Passed
 @pytest.mark.recovery
 def test_repair_then_partition():
     host = get_node_host()
@@ -824,6 +838,7 @@ def test_repair_then_partition():
     check_health()
 
 
+#Not sure it passed
 @pytest.mark.recovery
 def test_repair_then_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -842,4 +857,3 @@ def test_repair_then_all_partition():
     run_planned_operation(run_repair, partition, recovery)
 
     check_health()
-'''

@@ -49,6 +49,7 @@ def get_foldered_name(service_name):
     return '/test/integration/' + service_name
 
 
+
 def get_zk_path(service_name):
     # Foldered services have slashes removed: '/test/integration/foo' => 'test__integration__foo'
     return 'dcos-service-{}'.format(service_name.lstrip('/').replace('/', '__'))

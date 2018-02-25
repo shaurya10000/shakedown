@@ -19,6 +19,7 @@ def check_task_network(task_name, expected_network_name="dcos"):
     """
     _task = shakedown.get_task(task_id=task_name, completed=False)
 
+    print(str(_task))
     assert _task is not None, "Unable to find task named {}".format(task_name)
     if type(_task) == list or type(_task) == tuple:
         assert len(_task) == 1, "Found too many tasks matching {}, got {}"\
@@ -26,6 +27,7 @@ def check_task_network(task_name, expected_network_name="dcos"):
         _task = _task[0]
 
     for status in _task["statuses"]:
+        print("status = " + str(status))
         if status["state"] == "TASK_RUNNING":
             for network_info in status["container_status"]["network_infos"]:
                 if expected_network_name is not None:
