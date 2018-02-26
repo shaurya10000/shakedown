@@ -3,7 +3,7 @@ import pytest
 import shakedown
 
 
-from shakedown.framework_cassandra_tests import infinity_commons
+from tests import infinity_commons
 
 from tests.command import (
     check_health,

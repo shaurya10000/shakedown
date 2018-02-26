@@ -23,7 +23,7 @@ def dcos_ca_bundle():
     assert cert is not None
     return cert
 
-
+'''
 @pytest.fixture(scope='module')
 def service_account():
     """
@@ -116,3 +116,4 @@ def test_tls_connection(cassandra_service_tls, dcos_ca_bundle):
 
         sdk_jobs.run_job(config.get_verify_data_job(dcos_ca_bundle=dcos_ca_bundle))
         sdk_jobs.run_job(config.get_delete_data_job(dcos_ca_bundle=dcos_ca_bundle))
+'''
