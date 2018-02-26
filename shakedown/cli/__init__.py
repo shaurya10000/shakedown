@@ -1,3 +1,3 @@
 quiet = False
-ssh_key_file = '/tmp/261ssh.pem'
-ssh_user = 'shaugupt'
+ssh_key_file = '~/id_rsa'
+ssh_user = 'centos'

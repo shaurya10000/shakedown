@@ -132,6 +132,7 @@ def run_raw_cli(cmd, print_output=True):
     $ dcos package install <package-name>
     """
     dcos_cmd = "dcos {}".format(cmd)
+    print("dcos_cmd = " + dcos_cmd)
     result = subprocess.run([dcos_cmd], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout = ""
     stderr = ""

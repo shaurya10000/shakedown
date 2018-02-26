@@ -8,7 +8,11 @@ from dcos.errors import DCOSException, DCOSConnectionError, DCOSHTTPException
 
 from urllib.parse import urljoin
 import json
+import logging
+import sys
+from tests.command import spin
 
+log = logging.getLogger(__name__)
 
 def get_service(
         service_name,
@@ -231,37 +235,40 @@ def service_healthy(service_name, app_id=None):
         :rtype: bool
     """
 
-    print("service_healthy")
     marathon_client = marathon.create_client()
-    print("service_healthy 1")
+    print("here 1")
+    print(sys._getframe().f_code.co_name)
+    #log.debug(sys._getframe().f_code.co_name)
+
     marathon_api_url = shakedown.dcos_service_url('marathon')
+
     response = http.get(marathon_api_url + '/v2/apps')
-    #apps = marathon_client.get_apps_for_framework(service_name)
     apps = response.json().get('apps')
 
-    print("apps = " + str(apps))
+    #log.debug("apps = " + str(apps))
     myApp = None
     for app in apps:
-        print("--------------------------------------------")
-        print("app = " + str(app))
-        print("service name = " + str(app.get('labels', {}).get('DCOS_PACKAGE_FRAMEWORK_NAME')))
-        print("service_name = " + service_name)
+        log.debug("--------------------------------------------")
+        log.debug("app = " + str(app))
+        log.debug("service name = " + str(app.get('labels', {}).get('DCOS_PACKAGE_FRAMEWORK_NAME')))
+        log.debug("service_name = " + service_name)
+
         if app.get('labels', {}).get(
             'DCOS_PACKAGE_FRAMEWORK_NAME') == service_name :
-                 print("Assinging the app")
+                 log.debug("Assinging the app")
                  myApp = app
 
 
-    print("service_healthy 2")
-
     if myApp is not None:
-        print("myApp = " + str(myApp))
-        if (app['tasksHealthy']) \
-            and (app['tasksRunning']) \
-            and (not app['tasksStaged']) \
-            and (not app['tasksUnhealthy']):
+        log.debug("myApp = " + str(myApp))
+        if (myApp['tasksHealthy']) \
+            and (myApp['tasksRunning']) \
+            and (not myApp['tasksStaged']) \
+            and (not myApp['tasksUnhealthy']):
+                print("return true")
                 return True
 
+    print("return false")
     return False
 
 

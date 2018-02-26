@@ -192,21 +192,21 @@ def pytest_runtest_setup(item):
         # 2 Reset the test index.
         testlogs_test_index = 0
         # 3 Remove any prior logs for the test suite.
-        print("MDS Debugging..2")
+        #print("MDS Debugging..2")
         test_log_dir = sdk_utils.get_test_suite_log_directory(item)
-        print("MDS Debugging..4")
+        #print("MDS Debugging..4")
         if os.path.exists(test_log_dir):
             log.info('Deleting existing test suite logs: {}/'.format(test_log_dir))
             shutil.rmtree(test_log_dir)
 
-    print("MDS Debugging..5")
+    #print("MDS Debugging..5")
     # Increment the test index (to 1, if this is a new suite), and pass the value to sdk_utils for use internally.
     testlogs_test_index += 1
     sdk_utils.set_test_index(testlogs_test_index)
 
-    print("MDS Debugging..6")
+    #print("MDS Debugging..6")
     min_version_mark = item.get_marker('dcos_min_version')
-    print("MDS Debugging..7")
+    #print("MDS Debugging..7")
     #print("MDS Debugging.." + inspect.currentframe().f_code.co_name + inspect.currentframe().f_back.f_lineno)
     '''
     print('min_version_mark = ' + min_version_mark)
@@ -222,7 +222,7 @@ def pytest_runtest_setup(item):
     print(message)
     #print("MDS Debugging.." + inspect.currentframe().f_code.co_name + inspect.currentframe().f_back.f_lineno)
     '''
-    traceback.print_stack()
+    #traceback.print_stack()
 
 
 def setup_artifact_path(item: pytest.Item, artifact_name: str):

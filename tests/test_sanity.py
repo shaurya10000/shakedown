@@ -9,6 +9,7 @@ from testing import sdk_plan
 from testing import sdk_upgrade
 import shakedown
 from tests import config
+import time
 
 '''
 @pytest.fixture(scope='module', autouse=True)
@@ -42,31 +43,39 @@ def test_service_health():
     assert shakedown.service_healthy(config.SERVICE_NAME)
 
 
-'''
 
+
+#Passed
 @pytest.mark.sanity
 @pytest.mark.smoke
-@pytest.mark.mesos_v0
+#@pytest.mark.mesos_v0
 def test_mesos_v0_api():
-    service_name = config.get_foldered_service_name()
+    print("test_mesos_v0_api")
+    service_name = config.SERVICE_NAME
     print("service name = " + service_name)
     prior_api_version = sdk_marathon.get_mesos_api_version(service_name)
     if prior_api_version is not "V0":
-        sdk_marathon.set_mesos_api_version(service_name, "V0")
+        print("prior_api_version = " + str(prior_api_version))
+        sdk_marathon.set_mesos_api_version(service_name, "V1")
+        print("Changed the API version, now sleeping for 60sec")
+        time.sleep(60)
         sdk_marathon.set_mesos_api_version(service_name, prior_api_version)
 
-'''
+
+#Passed
 @pytest.mark.sanity
 def test_endpoints():
     # check that we can reach the scheduler via admin router, and that returned endpoints are sanitized:
     endpoints = sdk_cmd.svc_cli(
-        config.PACKAGE_NAME, config.get_foldered_service_name(),
+        config.PACKAGE_NAME, config.SERVICE_NAME,
         'endpoints native-client', json=True)
     assert endpoints['dns'][0] == sdk_hosts.autoip_host(
-        config.get_foldered_service_name(), 'node-0-server', 9042)
+        config.SERVICE_NAME, 'node-0-server', 9042)
     assert not 'vip' in endpoints
 
 
+
+#Skip
 @pytest.mark.sanity
 @pytest.mark.smoke
 def test_repair_cleanup_plans_complete():
@@ -97,7 +106,10 @@ def test_repair_cleanup_plans_complete():
         sdk_plan.wait_for_completed_plan(
             config.get_foldered_service_name(), 'repair')
 
+'''
 
+
+#Passed
 @pytest.mark.sanity
 @pytest.mark.metrics
 @pytest.mark.dcos_min_version('1.9')
@@ -113,9 +125,8 @@ def test_metrics():
 
     sdk_metrics.wait_for_service_metrics(
         config.PACKAGE_NAME,
-        config.get_foldered_service_name(),
+        config.SERVICE_NAME,
         "node-0-server",
         config.DEFAULT_CASSANDRA_TIMEOUT,
         expected_metrics_exist
     )
-'''

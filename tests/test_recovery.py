@@ -3,6 +3,8 @@ import time
 import pytest
 import requests
 from dcos.errors import DCOSException, DCOSAuthenticationException, DCOSHTTPException
+import sys
+import logging
 
 import dcos
 import shakedown
@@ -22,6 +24,7 @@ from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME, TASK_RUNNING_STATE
 from tests import infinity_commons
 
 HEALTH_WAIT_TIME = 300
+log = logging.getLogger(__name__)
 
 
 def bump_cpu_count_config(cpu_change=0.1):
@@ -98,7 +101,7 @@ def get_scheduler_host():
 
 
 def kill_task_with_pattern(pattern, host=None):
-    print("killing task with pattern: " + pattern)
+    log.info("Killing task with pattern: " + pattern)
     command = (
         "sudo kill -9 "
         "$(ps ax | grep {} | grep -v grep | tr -s ' ' | sed 's/^ *//g' | "
@@ -114,7 +117,7 @@ def kill_task_with_pattern(pattern, host=None):
             'Failed to kill task with pattern "{}"'.format(pattern)
         )
     else:
-        print("Killed task with pattern: " + pattern)
+        log.warning("Killed task with pattern: " + pattern)
 
 
 def kill_cassandra_daemon_executor(pattern, host=None):
@@ -129,7 +132,7 @@ def kill_cassandra_daemon_executor(pattern, host=None):
 
     if not result:
         raise RuntimeError(
-            'Failed to kill task with pattern "{}"'.format(pattern)
+            'Failed to kill Cassandra Daemon Executor'
         )
 
 
@@ -217,16 +220,18 @@ def _block_on_adminrouter(master_ip):
             return False, error_message
 
     spin(get_metadata, success, HEALTH_WAIT_TIME)
-    print("Master is up again.  Master IP: {}".format(master_ip))
+    log.info("Master is up again.  Master IP: {}".format(master_ip))
 
 
 def verify_leader_changed(old_leader_ip):
+
+    log.info(sys._getframe().f_code.co_name)
 
     def fn():
         try:
             return shakedown.master_leader_ip()
         except DCOSAuthenticationException:
-            print("Got exception while fetching leader")
+            log.error("Got exception while fetching leader")
         return old_leader_ip
 
     def success_predicate(new_leader_ip):
@@ -239,13 +244,13 @@ def verify_leader_changed(old_leader_ip):
 
 
     result = spin(fn, success_predicate)
-    print("Leader has changed to {}".format(result))
+    log.info("Leader IP {}".format(result))
 
 
 # Check if mesos agent / spartan is not running. Restart spartan to see if it is fixed
 def recover_host_from_partitioning(host):
     # if is_dns_healthy_for_node(host):
-    print("Restarting erlang and mesos on {}".format(host))
+    log.info("Restarting erlang and mesos on {}".format(host))
     restart_erlang_on_host(host)
     shakedown.restart_agent(host)
 
@@ -274,19 +279,19 @@ def restart_erlang_on_host(host):
 ONE_MINUTE = 60
 # Restart mesos agent if service is stuck or not running on some nodes
 def recover_failed_agents(hosts):
-    print("Mds recover_failed_agents " + str(hosts))
+    log.info("Recover failed agents- {}".format(str(hosts)))
     tasks = {}
     try:
         tasks = check_health(wait_time=ONE_MINUTE, assert_success=False)
-        print("Mds failed_tasks: " + str(tasks))
+        log.info("Failed_tasks- " + str(tasks))
         failed_hosts = find_failed_hosts(hosts, tasks)
-        print("mds failed_hosts " + failed_hosts)
+        log.info("Failed_hosts- " + failed_hosts)
         for h in failed_hosts:
-            print("Restarting mesos agent on {}".format(h))
+            log.info("Restarting mesos agent on {}".format(h))
             shakedown.restart_agent(h)
     except Exception as e:
-        print("error recover_failed_agents")
-        print(str(e))
+        log.error("error in recover_failed_agents")
+        log.error(str(e))
 
 
 def find_failed_hosts(hosts, tasks):
@@ -309,7 +314,7 @@ def setup_module():
     unset_ssl_verification()
     #uninstall()
     #install()
-    print("setup module health check")
+    log.info("Starting Health Check " + sys._getframe().f_code.co_name)
     check_health()
 
 
@@ -320,10 +325,9 @@ def teardown_module():
 '''
 @pytest.mark.recovery
 def test_kill_task_in_node():
-    print('MDS debugging..9' + __name__)
     kill_task_with_pattern('CassandraDaemon', get_node_host())
-    print('MDS debugging..10' + __name__)
     check_health()
+    log.info("Exit " + sys._getframe().f_code.co_name)
 
 
 @pytest.mark.recovery
@@ -339,15 +343,13 @@ def test_kill_all_task_in_node():
 @pytest.mark.recovery
 def test_scheduler_died():
     kill_task_with_pattern('cassandra.scheduler.Main', get_scheduler_host())
-
     check_health()
-
 
 
 @pytest.mark.recovery
 def test_executor_killed():
     host = get_node_host()
-    print("test_executor_killed: " + host)
+    log.info("host- " + str(host))
     kill_cassandra_daemon_executor('CassandraDaemon', host)
 
     recover_failed_agents([host])
@@ -366,41 +368,57 @@ def test_all_executors_killed():
 
 @pytest.mark.recovery
 def test_master_killed_block_on_admin_router():
+    print("Starting.....")
     master_leader_ip = shakedown.master_leader_ip()
+    log.info(sys._getframe().f_code.co_name)
+
     kill_task_with_pattern('mesos-master', master_leader_ip)
 
     # For us this is to verify that the leader/ mesos-master has come up again
     verify_leader_changed(master_leader_ip)
     check_health()
-
+'''
 
 # FAiled and made cluster unusable but started working after changing the dcos_auth_token in cli
 @pytest.mark.recovery
 def test_zk_killed_recovery():
-    print("Mds Debugging..test_zk_killed_recovery")
+    time.sleep(60)
+    log.info("Starting {}".format(sys._getframe().f_code.co_name))
+
     master_leader_ip = shakedown.master_leader_ip()
-    print("Mds Debugging..test_zk_killed_recovery")
+    log.info("master leader ip- " + master_leader_ip)
+
     kill_task_with_pattern('zookeeper', master_leader_ip)
 
-    print("Mds Debugging..test_zk_killed_recovery " + __name__)
     _block_on_adminrouter(master_leader_ip)
-    print("Mds Debugging2..test_zk_killed_recovery " + __name__)
+    time.sleep(60)
+    log.info("Taking a health check")
     check_health()
+    print("Sleeping for 120 sec")
+    time.sleep(120)
 
 
 # FAiled
+# Failed again when run after the above test
 @pytest.mark.recovery
 def test_zk_killed():
-    print("Mds Debugging..test_zk_killed")
+    time.sleep(60)
+    log.info("Starting {}".format(sys._getframe().f_code.co_name))
+
     master_leader_ip = shakedown.master_leader_ip()
-    print("Mds Debugging2..test_zk_killed")
+    log.info("master leader ip- " + master_leader_ip)
+
     kill_task_with_pattern('zookeeper', master_leader_ip)
 
-    print("Mds Debugging2..Killed zookeeper")
+    time.sleep(60)
+    #_block_on_adminrouter(master_leader_ip)
     verify_leader_changed(master_leader_ip)
+    time.sleep(60)
     check_health()
+#'''
 
-
+# Set 2
+'''
 #Passed
 @pytest.mark.recovery
 def test_partition():
@@ -414,7 +432,7 @@ def test_partition():
     check_health()
 
 
-#Failed
+#Passed
 @pytest.mark.recovery
 def test_partition_master_both_ways():
     master_leader_ip = shakedown.master_leader_ip()
@@ -425,7 +443,7 @@ def test_partition_master_both_ways():
     check_health()
     time.sleep(60)
 
-# not tried
+#Passed
 @pytest.mark.recovery
 def test_partition_master_incoming():
     master_leader_ip = shakedown.master_leader_ip()
@@ -436,7 +454,7 @@ def test_partition_master_incoming():
     check_health()
     time.sleep(60)
 
-# not tried
+#Passed
 @pytest.mark.recovery
 def test_partition_master_outgoing():
     master_leader_ip = shakedown.master_leader_ip()
@@ -447,7 +465,7 @@ def test_partition_master_outgoing():
     check_health()
     time.sleep(60)
 
-# not tried
+#Passed
 @pytest.mark.recovery
 def test_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -462,10 +480,12 @@ def test_all_partition():
 
     check_health()
     time.sleep(60)
+    check_health()
+'''
 
-
-
-#bump_cpu_count_config does not evaluates
+'''
+#Passes otherwise but started failing when it runs continuously after the above test
+#Managed this by restarting mesos-master and mesos-epmd service
 @pytest.mark.recovery
 def test_config_update_then_kill_task_in_node():
     print("here test_config_update_then_kill_task_in_node")
@@ -500,6 +520,9 @@ def test_config_update_then_kill_all_task_in_node():
 
 
 #passed
+# When running continuously the first node didn't come up, mesos-service and mesos-epmd restart
+# also didn't work.
+# Scheduler restart did the work
 @pytest.mark.recovery
 def test_config_update_then_scheduler_died():
     host = get_scheduler_host()
@@ -524,10 +547,12 @@ def test_config_update_then_executor_killed():
         lambda: kill_cassandra_daemon_executor('CassandraDaemon', host),
         lambda: recover_failed_agents([host])
     )
+    time.sleep(60)
     check_health()
 
 
-#passed
+# passed
+# All tasks start staging/ running simultaneously when killed by this test
 @pytest.mark.recovery
 def test_config_update_then_all_executors_killed():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -537,6 +562,7 @@ def test_config_update_then_all_executors_killed():
         lambda: [kill_cassandra_daemon_executor('CassandraDaemon', h) for h in hosts],
         lambda: recover_failed_agents(hosts)
     )
+    time.sleep(60)
     check_health()
 
 #passed
@@ -552,6 +578,7 @@ def test_config_update_then_master_killed():
     # as otherwise taks would not have communicated, this could have delayed effects
     # find out while testing
     print("Will do health check now..")
+    time.sleep(60)
     check_health()
     
     
@@ -566,7 +593,7 @@ def test_config_update_then_zk_killed():
         lambda: kill_task_with_pattern('zookeeper', master_leader_ip)#,
         #lambda: verify_leader_changed(master_leader_ip)
     )
-
+    time.sleep(60)
     check_health()
 
 
@@ -588,10 +615,12 @@ def test_config_update_then_partition():
     run_planned_operation(
         lambda: bump_cpu_count_config(-0.1), partition, lambda: recover_host_from_partitioning(host))
 
+    time.sleep(60)
     check_health()
 
 
 #Passed
+#Failed in contiguous run
 @pytest.mark.recovery
 def test_config_update_then_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -608,6 +637,7 @@ def test_config_update_then_all_partition():
             recover_host_from_partitioning(host)
 
     run_planned_operation(bump_cpu_count_config, partition, recovery)
+    time.sleep(60)
     check_health()
 
 
@@ -642,7 +672,9 @@ def test_cleanup_then_kill_all_task_in_node():
     check_health()
 
 
+
 #node-0 got lost after scheduler started again
+#Passed
 @pytest.mark.recovery
 def test_cleanup_then_scheduler_died():
     host = get_scheduler_host()
@@ -651,6 +683,7 @@ def test_cleanup_then_scheduler_died():
     check_health()
 
 
+#Passed
 @pytest.mark.recovery
 def test_cleanup_then_executor_killed():
     host = get_node_host()
@@ -698,9 +731,11 @@ def test_cleanup_then_zk_killed():
         lambda: verify_leader_changed(master_leader_ip))
 
     check_health()
+'''
 
-
+'''
 #Passed but all cleanup tasks got launched simultaneously
+#Passed
 @pytest.mark.recovery
 def test_cleanup_then_partition():
     host = get_node_host()
@@ -717,6 +752,7 @@ def test_cleanup_then_partition():
 #Passed
 # After this test the tasks keep getting killed and restarted!
 # Also the time of the task update keeps on changing
+#Passed
 @pytest.mark.recovery
 def test_cleanup_then_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -737,6 +773,7 @@ def test_cleanup_then_all_partition():
 
 
 #Passed
+#Passed
 @pytest.mark.recovery
 def test_repair_then_kill_task_in_node():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -751,6 +788,7 @@ def test_repair_then_kill_task_in_node():
     check_health()
 
 #flaky
+#Passed
 @pytest.mark.recovery
 def test_repair_then_kill_all_task_in_node():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -763,8 +801,9 @@ def test_repair_then_kill_all_task_in_node():
 
     check_health()
 
-'''
 
+
+#Passed
 #Passed
 @pytest.mark.recovery
 def test_repair_then_scheduler_died():
@@ -774,6 +813,7 @@ def test_repair_then_scheduler_died():
     check_health()
 
 
+#Passed
 #Passed
 @pytest.mark.recovery
 def test_repair_then_executor_killed():
@@ -789,6 +829,7 @@ def test_repair_then_executor_killed():
 
 
 #Passed
+#Passed
 @pytest.mark.recovery
 def test_repair_then_all_executors_killed():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -803,6 +844,7 @@ def test_repair_then_all_executors_killed():
 
 
 #Passed
+#Passed
 @pytest.mark.recovery
 def test_repair_then_master_killed():
     master_leader_ip = shakedown.master_leader_ip()
@@ -811,6 +853,7 @@ def test_repair_then_master_killed():
     verify_leader_changed(master_leader_ip)
     check_health()
 
+#Passed
 #Passed
 @pytest.mark.recovery
 def test_repair_then_zk_killed():
@@ -823,6 +866,7 @@ def test_repair_then_zk_killed():
 
     check_health()
 
+#Passed
 #Passed
 @pytest.mark.recovery
 def test_repair_then_partition():
@@ -839,6 +883,7 @@ def test_repair_then_partition():
 
 
 #Not sure it passed
+#Passed
 @pytest.mark.recovery
 def test_repair_then_all_partition():
     hosts = shakedown.get_service_ips(PACKAGE_NAME)
@@ -857,3 +902,4 @@ def test_repair_then_all_partition():
     run_planned_operation(run_repair, partition, recovery)
 
     check_health()
+'''
