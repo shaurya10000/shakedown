@@ -93,6 +93,7 @@ def get_metrics(package_name, service_name, task_name):
             task_info = task
             break
 
+    print("get_metrics here")
     if not task_info:
         return []
 
@@ -103,6 +104,8 @@ def get_metrics(package_name, service_name, task_name):
     containers_response = sdk_cmd.cluster_request(
         "GET", "/system/v1/agent/{}/metrics/v0/containers".format(agent_id), retry=False)
     reported_container_ids = json.loads(containers_response.text)
+
+    print("reported_container_ids = " + str(reported_container_ids))
 
     container_id_reported = False
     for container_id in reported_container_ids:
@@ -116,7 +119,10 @@ def get_metrics(package_name, service_name, task_name):
     app_response = sdk_cmd.cluster_request(
         "GET", "/system/v1/agent/{}/metrics/v0/containers/{}/app".format(agent_id, task_container_id), retry=False)
     app_json = json.loads(app_response.text)
+    print("app_json = " + str(app_json))
+
     if app_json['dimensions']['executor_id'] == executor_id:
+        print(" app_json['datapoints'] = " + str(app_json['datapoints']))
         return app_json['datapoints']
 
     raise Exception("No metrics found")

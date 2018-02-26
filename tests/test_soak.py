@@ -36,6 +36,10 @@ def test_backup_and_restore():
             plan_parameters)
 
 
+# Are we doing this ?
+# If we give same service_name to marathon and there is already a service
+# by that name then that service/ task is updated, in our case the
+# scheduler
 @pytest.mark.soak_upgrade
 def test_soak_upgrade_downgrade():
     """Install the Cassandra Universe package and attempt upgrade to master.
@@ -50,6 +54,8 @@ def test_soak_upgrade_downgrade():
         additional_options=install_options)
 
 
+# We did it manually for beta-2 to beta-3
+# Not required regularly
 @pytest.mark.soak_migration
 def test_cassandra_migration():
     backup_service_name = os.getenv('CASSANDRA_BACKUP_CLUSTER_NAME')

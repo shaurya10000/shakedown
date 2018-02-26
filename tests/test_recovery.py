@@ -3,6 +3,8 @@ import time
 import pytest
 import requests
 from dcos.errors import DCOSException, DCOSAuthenticationException, DCOSHTTPException
+import sys
+import logging
 
 import dcos
 import shakedown
@@ -22,6 +24,7 @@ from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME, TASK_RUNNING_STATE
 from tests import infinity_commons
 
 HEALTH_WAIT_TIME = 300
+log = logging.getLogger(__name__)
 
 
 def bump_cpu_count_config(cpu_change=0.1):
@@ -98,7 +101,7 @@ def get_scheduler_host():
 
 
 def kill_task_with_pattern(pattern, host=None):
-    print("killing task with pattern: " + pattern)
+    log.info("Killing task with pattern: " + pattern)
     command = (
         "sudo kill -9 "
         "$(ps ax | grep {} | grep -v grep | tr -s ' ' | sed 's/^ *//g' | "
@@ -114,7 +117,7 @@ def kill_task_with_pattern(pattern, host=None):
             'Failed to kill task with pattern "{}"'.format(pattern)
         )
     else:
-        print("Killed task with pattern: " + pattern)
+        log.warning("Killed task with pattern: " + pattern)
 
 
 def kill_cassandra_daemon_executor(pattern, host=None):
@@ -129,7 +132,7 @@ def kill_cassandra_daemon_executor(pattern, host=None):
 
     if not result:
         raise RuntimeError(
-            'Failed to kill task with pattern "{}"'.format(pattern)
+            'Failed to kill Cassandra Daemon Executor'
         )
 
 
@@ -317,13 +320,12 @@ def teardown_module():
     print("Not killing the cluster, do all tests on the same cluster only")
     #uninstall()
 
-'''
+
 @pytest.mark.recovery
 def test_kill_task_in_node():
-    print('MDS debugging..9' + __name__)
     kill_task_with_pattern('CassandraDaemon', get_node_host())
-    print('MDS debugging..10' + __name__)
     check_health()
+    log.info("Exit {}", sys._getframe().f_code.co_name)
 
 
 @pytest.mark.recovery
@@ -400,7 +402,7 @@ def test_zk_killed():
     verify_leader_changed(master_leader_ip)
     check_health()
 
-
+'''
 #Passed
 @pytest.mark.recovery
 def test_partition():
@@ -763,7 +765,7 @@ def test_repair_then_kill_all_task_in_node():
 
     check_health()
 
-'''
+
 
 #Passed
 @pytest.mark.recovery
@@ -857,3 +859,4 @@ def test_repair_then_all_partition():
     run_planned_operation(run_repair, partition, recovery)
 
     check_health()
+'''
