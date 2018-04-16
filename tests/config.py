@@ -4,6 +4,7 @@ import os
 import logging
 import textwrap
 import traceback
+import shakedown
 
 from testing import sdk_hosts
 from testing import sdk_jobs
@@ -22,6 +23,26 @@ DEFAULT_CASSANDRA_TIMEOUT = 600
 
 DEFAULT_NODE_ADDRESS = os.getenv('CASSANDRA_NODE_ADDRESS', sdk_hosts.autoip_host(SERVICE_NAME, 'node-0-server'))
 DEFAULT_NODE_PORT = os.getenv('CASSANDRA_NODE_PORT', '9042')
+
+TASK_RUNNING_STATE = 'TASK_RUNNING'
+
+DCOS_URL = shakedown.run_dcos_command('config show core.dcos_url')[0].strip()
+
+# expected SECURITY values: 'permissive', 'strict', 'disabled'
+if os.environ.get('SECURITY', '') == 'strict':
+    print('Using strict mode test configuration')
+    PRINCIPAL = 'service-acct'
+    DEFAULT_OPTIONS_DICT = {
+        "service": {
+            "user": "nobody",
+            "principal": PRINCIPAL,
+            "secret_name": "secret"
+        }
+    }
+else:
+    print('Using default test configuration')
+    PRINCIPAL = 'cassandra-principal'
+    DEFAULT_OPTIONS_DICT = {}
 
 
 def get_foldered_service_name():

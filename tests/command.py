@@ -8,8 +8,8 @@ import traceback
 import dcos
 import shakedown
 
-from tests.defaults import (
-    DEFAULT_NODE_COUNT,
+from tests.config import (
+    DEFAULT_TASK_COUNT,
     DEFAULT_OPTIONS_DICT,
     PACKAGE_NAME,
     SERVICE_NAME,
@@ -49,9 +49,9 @@ def check_health(wait_time=WAIT_TIME_IN_SECONDS, assert_success=True):
     def success_predicate(tasks):
         running_tasks = [t for t in tasks if t['state'] == TASK_RUNNING_STATE]
         print('Waiting for {} healthy tasks, got {}/{}'.format(
-            DEFAULT_NODE_COUNT, len(running_tasks), len(tasks)))
+            DEFAULT_TASK_COUNT, len(running_tasks), len(tasks)))
         return (
-            len(running_tasks) == DEFAULT_NODE_COUNT and shakedown.service_healthy(SERVICE_NAME),
+            len(running_tasks) == DEFAULT_TASK_COUNT and shakedown.service_healthy(SERVICE_NAME),
             'Service did not become healthy'
         )
 

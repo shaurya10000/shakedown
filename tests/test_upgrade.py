@@ -16,7 +16,7 @@ from tests.command import (
     uninstall,
 )
 
-from tests.defaults import DEFAULT_NODE_COUNT, SERVICE_NAME
+from tests.config import DEFAULT_TASK_COUNT, SERVICE_NAME
 
 def setup_module(module):
     uninstall()
@@ -124,7 +124,7 @@ def check_scheduler_health():
             return []
 
     def success_predicate(brokers):
-        return (len(brokers) == DEFAULT_NODE_COUNT,
+        return (len(brokers) == DEFAULT_TASK_COUNT,
                 'Scheduler and all nodes not available')
 
     spin(fn, success_predicate)

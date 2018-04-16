@@ -20,7 +20,7 @@ from tests.command import (
     install,
     uninstall,
 )
-from tests.defaults import DEFAULT_NODE_COUNT, PACKAGE_NAME, TASK_RUNNING_STATE, SERVICE_NAME
+from tests.config import DEFAULT_TASK_COUNT, TASK_RUNNING_STATE, SERVICE_NAME
 from tests import infinity_commons
 
 HEALTH_WAIT_TIME = 300
@@ -38,7 +38,7 @@ def bump_cpu_count_config(cpu_change=0.1):
     # In cassandra plugins code we are actually calling install request for the package is upgrade cluster
     response = request(
         dcos.http.put,
-        marathon_api_url('apps/' + PACKAGE_NAME),
+        marathon_api_url('apps/' + SERVICE_NAME),
         json=config,
         is_success=request_success
     )
@@ -86,12 +86,12 @@ def get_node_host():
     def fn():
         try:
             print("MDS get_node_host")
-            return shakedown.get_service_ips(PACKAGE_NAME)
+            return shakedown.get_service_ips(SERVICE_NAME)
         except (IndexError, DCOSHTTPException):
             return set()
 
     def success_predicate(result):
-        return len(result) == DEFAULT_NODE_COUNT, 'Nodes failed to return'
+        return len(result) == DEFAULT_TASK_COUNT, 'Nodes failed to return'
 
     return spin(fn, success_predicate).pop()
 
@@ -323,7 +323,7 @@ def teardown_module():
     print("Not killing the cluster, do all tests on the same cluster only")
     #uninstall()
 
-'''
+
 @pytest.mark.recovery
 def test_kill_task_in_node():
     kill_task_with_pattern('CassandraDaemon', get_node_host())
@@ -378,7 +378,7 @@ def test_master_killed_block_on_admin_router():
     # For us this is to verify that the leader/ mesos-master has come up again
     verify_leader_changed(master_leader_ip)
     check_health()
-'''
+
 
 # FAiled and made cluster unusable but started working after changing the dcos_auth_token in cli
 @pytest.mark.recovery
@@ -416,7 +416,7 @@ def test_zk_killed():
     verify_leader_changed(master_leader_ip)
     time.sleep(60)
     check_health()
-#'''
+
 
 # Set 2
 '''
